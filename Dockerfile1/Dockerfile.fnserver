@@ -1,4 +1,3 @@
-# Базовый образ с инструментами (ubuntu для glibc-совместимости с sqlite3)
 FROM ubuntu:22.04
 
 # Установка зависимостей
@@ -19,29 +18,21 @@ RUN apt-get update && \
 RUN groupadd --system fn && \
     useradd --system --gid fn --shell /usr/sbin/nologin --home /var/lib/fn fn
 
-# RUN apt-get update && apt-get install -y libcap2-bin && \
-#     setcap cap_net_bind_service=ep /fnserver && \
-#     rm -rf /var/lib/apt/lists/*
-
 # Устанавливаем версию FN ПЕРЕД использованием
-ENV FN_VERSION=0.3.753
+ENV FN_VERSION=0.3.750
 
-# Скачивание и распаковка исходников (убираем лишние пробелы в URL)
 RUN wget -q https://github.com/fnproject/fn/archive/refs/tags/v${FN_VERSION}.zip -O /tmp/fn.zip && \
     mkdir -p /src && \
     unzip /tmp/fn.zip -d /src && \
     mv /src/fn-${FN_VERSION} /src/fn && \
     rm /tmp/fn.zip
 
-# Сборка fnserver с CGO для sqlite3
 WORKDIR /src/fn/cmd/fnserver
 RUN go mod download
 RUN CGO_ENABLED=1 GOOS=linux go build -o /fnserver .
 
-# Директория для данных БД
 RUN mkdir -p /var/lib/fn/data && chown -R fn:fn /var/lib/fn
 
-# Рабочая директория (обязательно должна быть writable для пользователя fn)
 WORKDIR /var/lib/fn
 
 # Конфигурация через ENV
