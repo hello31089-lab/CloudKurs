@@ -15,9 +15,9 @@ if ! command -v wget &> /dev/null; then
   apt install -y wget ca-certificates
 fi
 
-REGISTRY_VERSION="2.8.3"
 
-echo "Скачивание Registry v${REGISTRY_VERSION}..."
+echo "Скачивание Registry..."
+REGISTRY_VERSION=2.8.3
 DOWNLOAD_URL="https://github.com/distribution/distribution/releases/download/v${REGISTRY_VERSION}/registry_${REGISTRY_VERSION}_linux_amd64.tar.gz"
 
 wget -q -O /tmp/registry.tar.gz "$DOWNLOAD_URL"

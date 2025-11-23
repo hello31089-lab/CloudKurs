@@ -1,0 +1,39 @@
+# Dockerfile.fnui
+FROM ubuntu:22.04
+
+# Установка зависимостей
+RUN apt-get update && \
+    apt-get install -y \
+    ca-certificates \
+    wget \
+    curl \
+    git \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Настройка переменных
+ENV NODE_ENV=production
+ENV FN_API_URL="http://localhost:8080"
+ENV PORT=4000
+ENV NPM_CONFIG_LOGLEVEL=warn
+
+# Создание и выбор рабочей директории
+RUN mkdir -p /app
+WORKDIR /app
+
+# Клонирование исходного кода напрямую в контейнер
+RUN git clone https://github.com/fnproject/ui.git ./
+
+# Установка webpack
+RUN npm install -g webpack@^1.14.0
+
+# Установка зависимостей и сборка
+RUN npm install
+RUN webpack
+
+# Порт
+EXPOSE 4000
+
+# Запуск
+CMD [ "npm", "start" ]

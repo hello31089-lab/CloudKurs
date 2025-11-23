@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  fnserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.fnserver
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    privileged: true
+    group_add:
+      - 1001  
+      - 999
+    environment:
+      - FN_REGISTRY=registry:5000
+      - FN_DB_URL=sqlite3:////var/lib/fn/data/fn.db
+    depends_on:
+      - registry
+    networks:
+      - fn-net
+
+  registry:
+    build:
+      context: .
+      dockerfile: Dockerfile.fnregistry
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry_data:/var/lib/registry
+    networks:
+      - fn-net
+
+  fnui:
+    build:
+      context: .
+      dockerfile: Dockerfile.fn-ui
+    ports:
+      - "4000:4000"
+    environment:
+      - FN_API_URL=http://fnserver:8080
+      - PORT=4000
+    depends_on:
+      - fnserver
+    networks:
+      - fn-net
+
+volumes:
+  registry_data:
+    driver: local
+
+networks:
+  fn-net:
+    driver: bridge

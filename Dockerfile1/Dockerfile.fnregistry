@@ -1,0 +1,35 @@
+# Dockerfile.registry
+FROM ubuntu:22.04
+
+# Установка зависимостей
+RUN apt-get update && \
+    apt-get install -y \
+    ca-certificates \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Создание системного пользователя
+RUN groupadd --system registry && \
+    useradd --system --gid registry --shell /usr/sbin/nologin --home /var/lib/registry registry
+
+# Скачивание и установка бинарника registry
+ENV REGISTRY_VERSION=2.8.3
+RUN wget https://github.com/distribution/distribution/releases/download/v${REGISTRY_VERSION}/registry_${REGISTRY_VERSION}_linux_amd64.tar.gz -O /tmp/registry.tar.gz && \
+    tar -xzf /tmp/registry.tar.gz -C /tmp/ && \
+    cp /tmp/registry /usr/local/bin/registry && \
+    chmod +x /usr/local/bin/registry && \
+    rm -rf /tmp/*
+
+RUN mkdir -p /var/lib/registry /etc/docker/registry && \
+    chown -R registry:registry /var/lib/registry /etc/docker/registry
+
+# Конфигурация
+USER registry
+RUN echo 'version: 0.1\nlog:\n  fields:\n    service: registry\nstorage:\n  filesystem:\n    rootdirectory: /var/lib/registry\nhttp:\n  addr: :5000' > /etc/docker/registry/config.yml
+
+# Порт
+EXPOSE 5000
+
+ENTRYPOINT ["/usr/local/bin/registry"]
+CMD ["serve", "/etc/docker/registry/config.yml"]

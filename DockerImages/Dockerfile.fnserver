@@ -1,0 +1,52 @@
+# Dockerfile.fnserver
+FROM ubuntu:22.04
+
+# Установка зависимостей
+RUN apt-get update && \
+    apt-get install -y \
+    ca-certificates \
+    wget \
+    git \
+    gcc \
+    libc6-dev \
+    make \
+    golang-go \
+    unzip \
+    libsqlite3-dev \
+    libcap2-bin \
+    && rm -rf /var/lib/apt/lists/*
+
+# Создание пользователя fn
+RUN groupadd --system fn && \
+    useradd --system --gid fn --shell /usr/sbin/nologin --home /var/lib/fn fn
+
+RUN wget -q https://github.com/fnproject/fn/archive/refs/heads/master.zip -O /tmp/fn.zip && \
+    mkdir -p /src && \
+    unzip /tmp/fn.zip -d /src && \
+    mv /src/fn-master /src/fn && \
+    rm /tmp/fn.zip
+
+WORKDIR /src/fn/cmd/fnserver
+RUN go mod download
+RUN CGO_ENABLED=1 GOOS=linux go build -o /fnserver .
+
+RUN mkdir -p /var/lib/fn/data && \
+    chown -R fn:fn /var/lib/fn
+
+RUN groupadd -f docker && \
+    usermod -aG docker fn
+
+RUN setcap cap_net_bind_service=ep /fnserver
+
+WORKDIR /var/lib/fn
+ENV FN_DB_URL=sqlite3:////var/lib/fn/data/fn.db
+ENV FN_LISTENER=0.0.0.0:8080
+ENV FN_REGISTRY=0.0.0.0:5000
+
+USER fn
+
+VOLUME /var/lib/fn/data
+EXPOSE 8080
+
+ENTRYPOINT ["/fnserver"]
+CMD ["start"]

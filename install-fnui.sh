@@ -50,5 +50,4 @@ systemctl daemon-reload
 systemctl enable --now fnui
 
 echo "Fn UI запущен на порту 4000"
-echo "Подключайтесь: http://10.0.1.4:4000"
 echo "Fn API URL: $FN_API_URL"
