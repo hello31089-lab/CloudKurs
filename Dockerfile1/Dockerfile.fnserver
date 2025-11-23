@@ -38,6 +38,7 @@ WORKDIR /var/lib/fn
 # Конфигурация через ENV
 ENV FN_DB_URL=sqlite3:////var/lib/fn/data/fn.db
 ENV FN_LISTENER=0.0.0.0:8080
+ENV FN_MEMORY_SWAP=0
 
 # Volume для persistence
 VOLUME /var/lib/fn/data
